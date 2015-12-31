@@ -18,6 +18,7 @@ size_t _prefix(enum WritingMode mode, char* buffer) {
 			buffer[1] = 'b';
 			return 2;
 		case DEC:
+			return 0;
 		default:
 			return 0;
 	}
@@ -25,17 +26,18 @@ size_t _prefix(enum WritingMode mode, char* buffer) {
 
 size_t itoa(uint32_t number, char *const buffer, size_t buf_sz, enum WritingMode mode) {
 	size_t
-		initialPos = _prefix(mode, buffer),
-		i = initialPos;
+		prLen = _prefix(mode, buffer),
+		i = 0;
+	char *b = buffer + prLen;
 
 	uint8_t modeBase = mode;
 
 	do {
 		uint8_t code = number % modeBase;
 		char c = _digits[code];
-		buffer[i++] = c;
+		b[i++] = c;
 
-		if(i + 1 >= buf_sz) {
+		if(i + prLen + 1 >= buf_sz) {
 			// break if number is too big
 			// i + 1 = text of digit and '\0' symbol
 			return 0;
@@ -43,14 +45,15 @@ size_t itoa(uint32_t number, char *const buffer, size_t buf_sz, enum WritingMode
 	} while ((number /= modeBase) > 0);
 
 	// revert
-	for(size_t j = initialPos; j < i / 2; ++j) {
-		size_t mirrorIndex = i - j - 1;
-		char c = buffer[j];
-		buffer[j] = buffer[mirrorIndex];
-		buffer[mirrorIndex] = c;
+	size_t mid = (i + 1) / 2;
+	for(size_t j = 0; j < mid; ++j) {
+		size_t mirrInd = i - j - 1;
+		char c = b[j];
+		b[j] = b[mirrInd];
+		b[mirrInd] = c;
 	}
 
 	// end of string and return length
-	buffer[i] = '\0';
-	return i + 1;
+	b[i] = '\0';
+	return i + prLen + 1;
 }

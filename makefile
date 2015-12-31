@@ -23,7 +23,7 @@ execute: myos.bin
 	$(QEMU) -kernel myos.bin
 
 clean:
-	rm ./*.o
-	rm ./*.bin
-	rm ./*.iso
-	rm ./*.out
+	rm ./*.o -f
+	rm ./*.bin -f
+	rm ./*.iso -f
+	rm ./*.out -f

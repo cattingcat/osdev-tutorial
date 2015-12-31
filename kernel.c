@@ -31,9 +31,14 @@ void kernel_main(void* raw_memory, uint32_t size) {
 	write_string(buffer);
 	write_string("\n");
 
-	buffer += len;
-	len = itoa(size, buffer, size - len, DEC);
+	len = itoa(size, buffer, size, DEC);
 	write_string("raw memory size address: ");
+	write_string(buffer);
+	write_string("\n");
+
+	write_string("check innterrupt 23 access to 0x1: ");
+	uint32_t atZero = *((uint32_t*)0x1);
+	len = itoa(0xC0, buffer, size, BIN);
 	write_string(buffer);
 	write_string("\n");
 
