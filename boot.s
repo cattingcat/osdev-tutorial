@@ -5,7 +5,6 @@
 .set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
 .set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
-.set HEAP_SIZE, 5*1024*1024
 .set STACK_SIZE, 5*1024
 
 # Declare a header as in the Multiboot Standard. We put this into a special
@@ -28,12 +27,8 @@ stack_bottom:
 .skip STACK_SIZE
 stack_top:
 
-.section .heap_data
-raw_memory:
-.skip HEAP_SIZE
-raw_memory_end:
-
 .include "arch/x32/gdt.s"
+.include "arch/x32/idt.s"
 
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
@@ -47,12 +42,12 @@ _start:
 	movl $stack_top, %esp
 
 	call setup_gdt
+	call setup_idt
 
 	# We are now ready to actually execute C code. We cannot embed that in an
 	# assembly file, so we'll create a kernel.c file in a moment. In that file,
 	# we'll create a C entry point called kernel_main and call it here.
-	pushl $HEAP_SIZE
-	pushl $raw_memory
+	pushl %ds
 	call kernel_main
 
 	# In case the function returns, we'll want to put the computer into an

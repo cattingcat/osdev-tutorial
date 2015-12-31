@@ -37,7 +37,6 @@ SECTIONS
 		*(COMMON)
 		*(.bss)
 		*(.bootstrap_stack)
-		*(.heap_data)
 	}
 
 	/* The compiler may produce other sections, by default it will put them in

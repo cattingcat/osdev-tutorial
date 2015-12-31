@@ -19,9 +19,11 @@ uint16_t make_vgaentry(char c, uint8_t color) {
 
 size_t row = 0;
 size_t column = 0;
-uint8_t color;
+uint8_t color = 0;
 
 void initialize_terminal() {
+	if(color != 0) return;
+	
 	color = make_color(COLOR_BLACK, COLOR_DARK_GREY);
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {

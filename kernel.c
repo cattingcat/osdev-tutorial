@@ -20,25 +20,32 @@
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif
-void kernel_main(void* raw_memory, uint32_t size) {
+void kernel_print(uint32_t val) {
 	initialize_terminal();
 
-	uint32_t rawMemAddr = (uint32_t)raw_memory;
-	char* buffer = raw_memory;
-	size_t len = itoa(rawMemAddr, buffer, size, DEC);
+	const size_t bufSz = 128;
+	char buffer[bufSz];
 
-	write_string("raw memory address: ");
+	write_string("kernel_print: ");
+	itoa(val, buffer, bufSz, DEC);
 	write_string(buffer);
 	write_string("\n");
+}
 
-	len = itoa(size, buffer, size, DEC);
-	write_string("raw memory size address: ");
-	write_string(buffer);
-	write_string("\n");
+void kernel_main(uint32_t ds) {
+	initialize_terminal();
+
+	const size_t bufSz = 128;
+	char buffer[bufSz];
 
 	write_string("check innterrupt 23 access to 0x1: ");
 	uint32_t atZero = *((uint32_t*)0x1);
-	len = itoa(0xC0, buffer, size, BIN);
+	itoa(atZero, buffer, bufSz, HEX);
+	write_string(buffer);
+	write_string("\n");
+
+	write_string("additional arg: ");
+	itoa(ds, buffer, bufSz, HEX);
 	write_string(buffer);
 	write_string("\n");
 
