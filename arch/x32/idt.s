@@ -1,5 +1,5 @@
 # interrupt table setup
-.set INT_COUNT, 50	# num of possible interrupts
+.set INT_COUNT, 255	# num of possible interrupts
 .set IDT_REC_SZ, 8	# size of IDT record(8 byte - x32, 16 byte - x64)
 
 # TypeAttr(8)
@@ -31,15 +31,27 @@ setup_idt:
 	lidt idtr
 	ret
 
-.set INT_NUM, 23
+.set INT_NUM, 230
 setup_test_idt_entry:
 	movl $test_int_handler, %eax
 	movl $INT_NUM, %ebx
 	call set_idt_entry
 	int $INT_NUM
 	ret
+	
 test_int_handler:
+	cli		# disable interrupts
+	pusha	# push all registers to stack
+
+	# just print 11 to console when interrupt called
+	pushl $11
+	call kernel_print
+	popl %eax
+
     movl $0x123abc, 0x1
+
+	popa	# pop all registers
+	sti		# enable interrupts
     iret
 
 

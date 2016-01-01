@@ -17,6 +17,12 @@
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
+# links from ld-file
+.long __mboot
+.long __code
+.long __bss
+.long __end
+.long _start
 
 # Currently the stack pointer register (esp) points at anything and using it may
 # cause massive harm. Instead, we'll provide our own stack. We will allocate
@@ -41,6 +47,9 @@ _start:
 	# our stack (as it grows downwards).
 	movl $stack_top, %esp
 
+	# GRUB pushhed info about bootloading in structure with addr = %ebx
+	pushl %ebx
+
 	call setup_gdt
 	call setup_idt
 
@@ -49,8 +58,11 @@ _start:
 	# We are now ready to actually execute C code. We cannot embed that in an
 	# assembly file, so we'll create a kernel.c file in a moment. In that file,
 	# we'll create a C entry point called kernel_main and call it here.
-	pushl %ds
+
 	call kernel_main
+	popl %ebp
+
+	int $230
 
 	# In case the function returns, we'll want to put the computer into an
 	# infinite loop. To do that, we use the clear interrupt ('cli') instruction
