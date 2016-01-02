@@ -29,6 +29,9 @@ void kernel_print(uint32_t val) {
 	write_string("kernel_print: ");
 	itoa(val, buffer, bufSz, DEC);
 	write_string(buffer);
+	write_string(" : ");
+	itoa(val, buffer, bufSz, HEX);
+	write_string(buffer);
 	write_string("\n");
 }
 
@@ -49,5 +52,5 @@ void kernel_main(uint32_t ds) {
 	write_string(buffer);
 	write_string("\n");
 
-	write_string("Hello, kernel World!\nqwe");
+	write_string("Hello, kernel World!\n");
 }

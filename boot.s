@@ -35,6 +35,9 @@ stack_top:
 
 .include "arch/x32/gdt.s"
 .include "arch/x32/idt.s"
+.include "arch/x32/int_handlers.s"
+.include "arch/x32/pic.s"
+.include "arch/x32/pit.s"
 
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
@@ -55,6 +58,13 @@ _start:
 
 	call setup_test_idt_entry
 
+	call init_pic_interrupts
+	call init_pit
+
+	# enable IRQ (PIT interrupts)
+	mov $0x00, %ax
+	call set_pic_mask
+
 	# We are now ready to actually execute C code. We cannot embed that in an
 	# assembly file, so we'll create a kernel.c file in a moment. In that file,
 	# we'll create a C entry point called kernel_main and call it here.
@@ -62,17 +72,9 @@ _start:
 	call kernel_main
 	popl %ebp
 
-	int $230
-
-	# In case the function returns, we'll want to put the computer into an
-	# infinite loop. To do that, we use the clear interrupt ('cli') instruction
-	# to disable interrupts, the halt instruction ('hlt') to stop the CPU until
-	# the next interrupt arrives, and jumping to the halt instruction if it ever
-	# continues execution, just to be safe. We will create a local label rather
-	# than real symbol and jump to there endlessly.
-	cli
-	hlt
+	# infinity loop that waiting interrupts
 .Lhang:
+	hlt
 	jmp .Lhang
 
 # Set the size of the _start symbol to the current location '.' minus its start.
