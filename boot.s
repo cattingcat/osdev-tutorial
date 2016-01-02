@@ -38,6 +38,7 @@ stack_top:
 .include "arch/x32/int_handlers.s"
 .include "arch/x32/pic.s"
 .include "arch/x32/pit.s"
+.include "arch/x32/page.s"
 
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
@@ -55,20 +56,27 @@ _start:
 
 	call setup_gdt
 	call setup_idt
+	call setup_pic
 
-	call setup_test_idt_entry
+	# Test functions for Software and Hardware interrupts
+	# call setup_test_idt_entry
+	# call init_pit
 
-	call init_pic_interrupts
-	call init_pit
+	# reserve 4MB
+	movl $1024, %ecx
+    call setup_page
+	call register_page_fault
+
+	# try to throw PageFault
+	movl (0xFFFFFFFFFFFFFFFA), %eax
 
 	# enable IRQ (PIT interrupts)
 	mov $0x00, %ax
 	call set_pic_mask
 
-	# We are now ready to actually execute C code. We cannot embed that in an
-	# assembly file, so we'll create a kernel.c file in a moment. In that file,
-	# we'll create a C entry point called kernel_main and call it here.
 
+
+	# call C-code
 	call kernel_main
 	popl %ebp
 

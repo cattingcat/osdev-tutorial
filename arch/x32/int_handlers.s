@@ -19,3 +19,23 @@ test_int_handler:
 	popa	# pop all registers
 	sti		# enable interrupts
     iret
+
+register_page_fault:
+	movl $page_fault, %eax
+	movl $14, %ebx
+	call set_idt_entry
+	ret
+
+page_fault:
+	cli
+	pusha
+
+	movl %cr2, %eax
+	pushl %eax
+	call kernel_print
+	popl %eax
+
+	popa
+	sti
+	hlt		# shouldnt continue programm
+	iret

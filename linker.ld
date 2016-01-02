@@ -22,6 +22,12 @@ SECTIONS
 		*(.text)
 	}
 
+	.page_data BLOCK(4K) : ALIGN(4K)
+	{
+		__page_table = .;
+		*(.page_data)
+	}
+
 	/* Read-only data. */
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{

@@ -29,7 +29,7 @@
 
 .set PIT_CH0_OPTS, (PIT_CHANNEL_0 | PIT_LHBYTE | PIT_MODE_2 | PIT_BIN_MODE)
 .set PIT_BASE_FREQ, 1193182
-.set DIVISOR, 23863 #(PIT_BASE_FREQ / 50)
+.set DIVISOR, 43863 #(PIT_BASE_FREQ / 50)
 .set DIV_LOW, (DIVISOR & 0xFF)
 .set DIV_HIGH, ((DIVISOR >> 8) & 0xFF)
 
@@ -52,6 +52,7 @@ timer_handler:
 	sti
 	iret
 
+# Initialize timer and set interrupt handler
 init_pit:
 	cli
 	# add interrupt listener for IRQ0 (interrupt no 32)

@@ -23,8 +23,8 @@ uint8_t color = 0;
 
 void initialize_terminal() {
 	if(color != 0) return;
-	
-	color = make_color(COLOR_BLACK, COLOR_DARK_GREY);
+
+	color = make_color(COLOR_GREEN, COLOR_BLACK);
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
@@ -45,6 +45,10 @@ void put_entry_at(char c, uint8_t color, size_t x, size_t y) {
 void put_char(char c) {
 	if(c == '\n') {
 		++row;
+		if(row == VGA_HEIGHT) {
+			row = 0;
+		}
+
 		column = 0;
 		return;
 	}

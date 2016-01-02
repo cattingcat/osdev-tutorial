@@ -15,11 +15,10 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
-
-
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif
+
 void kernel_print(uint32_t val) {
 	initialize_terminal();
 
@@ -32,6 +31,9 @@ void kernel_print(uint32_t val) {
 	write_string(" : ");
 	itoa(val, buffer, bufSz, HEX);
 	write_string(buffer);
+	write_string(" : ");
+	itoa(val, buffer, bufSz, BIN);
+	write_string(buffer);
 	write_string("\n");
 }
 
@@ -40,17 +42,6 @@ void kernel_main(uint32_t ds) {
 
 	const size_t bufSz = 128;
 	char buffer[bufSz];
-
-	write_string("check innterrupt 23 access to 0x1: ");
-	uint32_t atZero = *((uint32_t*)0x1);
-	itoa(atZero, buffer, bufSz, HEX);
-	write_string(buffer);
-	write_string("\n");
-
-	write_string("additional arg: ");
-	itoa(ds, buffer, bufSz, HEX);
-	write_string(buffer);
-	write_string("\n");
 
 	write_string("Hello, kernel World!\n");
 }

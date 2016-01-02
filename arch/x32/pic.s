@@ -22,7 +22,7 @@
 #	because first 32 ints is CPU-fault interrupts
 #	Interrupts from PIC named IRQ
 # 	Custom interrupts - ISR
-init_pic_interrupts:
+setup_pic:
 	# Sent initialize command
 	#	now PICs wait for 3 extra 'init words' to data port
 	movb $0x11, %al
