@@ -3,10 +3,14 @@
 .set SIZE_4KB, 0x1000
 .set DIR_LEN, 1024
 .set TBL_LEN, 1024
-# Empty tbl entry, Present = 0, ReadWrite = 1(Write), Permissions = 0(Super)
-# 0b 00000000 00000000 0000|0000 00000010
-.set EMPTY_ENTRY, 0x00000002
-.set FILLED_ENTRY, 0x00000003
+# Entry flags:
+.set PRESENT, 	0b1
+.set WRITABLE, 	0b10
+.set USER, 		0b100
+.set ACCESSED, 	0b10000
+.set DIRTY, 	0b100000
+.set EMPTY_ENTRY, WRITABLE # (not present)
+.set FILLED_ENTRY, (PRESENT | WRITABLE)
 
 # Each page table entry represent 4KB
 
@@ -43,6 +47,7 @@ page_dir:
 page_tbl_0:
 	# Each entry is a set of flags and Frame address
 	.skip TBL_LEN * PAGE_TBL_ENTRY_SZ
+paging_end:
 
 
 .section .text
@@ -65,7 +70,7 @@ setup_page:
 	movl %cr0, %ecx
 	or $0x80000000, %ecx
 	movl %ecx, %cr0
-	
+
 	ret
 
 clear_page_dir:
@@ -83,7 +88,7 @@ clear_page_dir:
 	CPD_cycle_end:
 	ret
 
-# Setup tbl 0, first ecx chinks
+# Setup tbl 0, first ecx chunks
 # ecx - number of chunks (by 4KB)
 setup_tbl_0:
 	movl $0, %ebx
@@ -111,4 +116,36 @@ setup_tbl_0:
 		incl %ebx
 		jmp ST0_cycle_start
 	ST0_cycle_end:
+	ret
+
+
+
+# Get Directory info and PageTable Info from page addr
+# In:
+#	%eax - addr (32bit)
+# Out:
+#	%eax - Page Directory entry
+#	%ebx - Page Table entry
+get_addr_location:
+	movl %eax, %ebx
+	shrl $22, %ebx
+	# find entry bu addr. ecx - pointer to pageDir entry
+	leal page_dir(, %ebx, PAGE_DIR_ENTRY_SZ), %ecx
+	movl (%ecx), %ecx			# ecx = pageDir entry
+		pushl %ecx				# store page dir entry
+
+	testl $0b10, %ecx			# pageDir initialized?
+	movl $0x0, %ebx
+	je GAL_end
+
+	# getting offset in PageTable
+	movl %eax, %ebx
+	shrl $12, %ebx
+	and $0b0000001111111111, %bx # take last 10 bits
+	and $0xFFFFF000, %ecx		# remove flag bits from PageDir entry
+	# Find PageTbl entry by addr
+	leal (%ecx, %ebx, PAGE_TBL_ENTRY_SZ), %ebx
+	movl (%ebx), %ebx			# loadl page entry to ebx
+	GAL_end:
+		popl %eax			# load pageDir entry
 	ret

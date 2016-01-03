@@ -68,7 +68,7 @@ _start:
 	call register_page_fault
 
 	# try to throw PageFault
-	movl (0xFFFFFFFFFFFFFFFA), %eax
+	# movl (0xFFFFFFFFFFFFFFFA), %eax
 
 	# enable IRQ (PIT interrupts)
 	mov $0x00, %ax

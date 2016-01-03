@@ -2,6 +2,6 @@ export PATH="$HOME/opt/cross/bin:$PATH"
 
 pusha
 pushl page_tbl_0
-call kernel_print
+call k_print
 addl $4, %esp
 popa

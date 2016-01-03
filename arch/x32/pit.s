@@ -45,7 +45,7 @@ timer_handler:
 	incl %eax
 	movl %eax, timer_counter
 	pushl %eax
-	call kernel_print
+	call k_print
 	popl %eax
 	call pic_ack
 	popa

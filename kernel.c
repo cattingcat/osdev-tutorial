@@ -19,7 +19,7 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-void kernel_print(uint32_t val) {
+void k_print(uint32_t val) {
 	initialize_terminal();
 
 	const size_t bufSz = 128;

@@ -13,7 +13,7 @@ test_int_handler:
 
 	# just print 11 to console when interrupt called
 	pushl $0x123ABC
-	call kernel_print
+	call k_print
 	popl %eax
 
 	popa	# pop all registers
@@ -32,7 +32,7 @@ page_fault:
 
 	movl %cr2, %eax
 	pushl %eax
-	call kernel_print
+	call k_print
 	popl %eax
 
 	popa
