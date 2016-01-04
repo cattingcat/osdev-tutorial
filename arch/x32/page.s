@@ -4,11 +4,14 @@
 .set DIR_LEN, 1024
 .set TBL_LEN, 1024
 # Entry flags:
-.set PRESENT, 	0b1
-.set WRITABLE, 	0b10
-.set USER, 		0b100
-.set ACCESSED, 	0b10000
-.set DIRTY, 	0b100000
+.set PRESENT, 	0b1		# presented in memory?
+.set WRITABLE, 	0b10	# Writable or Readable?
+.set USER, 		0b100	# User or Superuser?
+.set ACCESSED, 	0b10000	# Page was accessed by read/write/execute
+.set DIRTY, 	0b100000	# Page was edited
+.set SIZE_4MB, 	0b1000000	# Page size (0 - 4KB, 1 - 4MB) (only PSE)
+.set PAT, 		0b10000000	# Page Attribute Table
+.set GLOBAL,	0b100000000	# Will never deleted from TLB
 .set EMPTY_ENTRY, WRITABLE # (not present)
 .set FILLED_ENTRY, (PRESENT | WRITABLE)
 
@@ -40,28 +43,23 @@
 .align SIZE_4KB
 page_dir:
 	# Each entry is a pointer to Page Table
-	.skip DIR_LEN * PAGE_DIR_ENTRY_SZ
+	.fill DIR_LEN, PAGE_DIR_ENTRY_SZ, EMPTY_ENTRY
 
 # Page table for kernel
 .align SIZE_4KB	# Must be aligned by 4KB
 page_tbl_0:
 	# Each entry is a set of flags and Frame address
-	.skip TBL_LEN * PAGE_TBL_ENTRY_SZ
+	.fill (DIR_LEN * TBL_LEN), PAGE_TBL_ENTRY_SZ, EMPTY_ENTRY
+	# reserve space for other page_tables 1..1024
+	# and virtual address will equal to linear address
+/* page_tables:
+	.skip TBL_LEN * PAGE_TBL_ENTRY_SZ * (DIR_LEN - 1) */
 paging_end:
 
 
 .section .text
 setup_page:
-	pushl %ecx
-	call clear_page_dir
-	popl %ecx
-
-	call setup_tbl_0
-
-	# set first rage_dir with tbl0
-	movl $page_tbl_0, %ecx
-	or $FILLED_ENTRY, %ecx	# 0b11
-	movl %ecx, page_dir
+	call allocate_kernel
 
 	# setup cr3 register with page dir pointer
 	movl $page_dir, %ecx
@@ -73,6 +71,7 @@ setup_page:
 
 	ret
 
+/*
 clear_page_dir:
 	movl $DIR_LEN, %ecx
 	movl $0, %ebx
@@ -87,6 +86,7 @@ clear_page_dir:
 		jmp CPD_cycle_begin
 	CPD_cycle_end:
 	ret
+*/
 
 # Setup tbl 0, first ecx chunks
 # ecx - number of chunks (by 4KB)
@@ -118,7 +118,58 @@ setup_tbl_0:
 	ST0_cycle_end:
 	ret
 
+# Setup page tables for kernel
+# In:
+# 	eax - max addr, end of Kernel addr
+allocate_kernel:
+	# remove first 12 bits from addr
+	andl $0xFFFFF000, %eax
+	addl $0x1000, %eax
 
+	movl $0, %ecx			# Physical/Logical addr
+	movl $page_tbl_0, %ebx	# PT entry addr
+
+	AK_cycle_begin:
+		pushl %ecx
+			orl $FILLED_ENTRY, %ecx
+			movl %ecx, (%ebx)
+		popl %ecx
+
+		# If qurrent addr equal to max addr - break
+		cmpl %eax, %ecx
+			je AK_end
+
+		addl $0x1000, %ecx	# inc Phys addr for 4KB
+		addl $4, %ebx		# int PT addr for entry size
+	jmp AK_cycle_begin
+AK_end:
+
+	# fill Page Directory table
+	AK_dir_fill:
+	shrl $22, %eax		# take index in dir_table
+	movl %eax, %ebx		# ebx number of dir tbl entries
+	movl $0, %eax		# eax index of page tbl
+	movl $0, %ecx		# ecx index in page_dir tbl
+
+	# for add Page dir addresses from maxxx addr
+	AK_fill_begin:
+		pushl %eax
+			movl $0x1000, %edx
+			mull %edx
+			addl $page_tbl_0, %eax
+			orl $FILLED_ENTRY, %eax
+			movl %eax, page_dir(,%ecx, 4)
+		popl %eax
+
+		cmp %ebx, %eax
+			je AK_fill_end
+			
+		incl %eax
+		incl %ecx
+	jmp AK_fill_begin
+
+AK_fill_end:
+	ret
 
 # Get Directory info and PageTable Info from page addr
 # In:

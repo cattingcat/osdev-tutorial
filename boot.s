@@ -62,8 +62,7 @@ _start:
 	# call setup_test_idt_entry
 	# call init_pit
 
-	# reserve 4MB
-	movl $1024, %ecx
+	movl $__end, %eax
     call setup_page
 	call register_page_fault
 
