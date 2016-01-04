@@ -4,15 +4,16 @@
 .set DIR_LEN, 1024
 .set TBL_LEN, 1024
 # Entry flags:
-.set PRESENT, 	0b1		# presented in memory?
-.set WRITABLE, 	0b10	# Writable or Readable?
-.set USER, 		0b100	# User or Superuser?
-.set ACCESSED, 	0b10000	# Page was accessed by read/write/execute
+.set PRESENT, 	0b1			# presented in memory?
+.set WRITABLE, 	0b10		# Writable or Readable?
+.set USER, 		0b100		# User or Superuser?
+.set ACCESSED, 	0b10000		# Page was accessed by read/write/execute
 .set DIRTY, 	0b100000	# Page was edited
 .set SIZE_4MB, 	0b1000000	# Page size (0 - 4KB, 1 - 4MB) (only PSE)
 .set PAT, 		0b10000000	# Page Attribute Table
 .set GLOBAL,	0b100000000	# Will never deleted from TLB
-.set EMPTY_ENTRY, WRITABLE # (not present)
+
+.set EMPTY_ENTRY, WRITABLE	# (not present)
 .set FILLED_ENTRY, (PRESENT | WRITABLE)
 
 # Each page table entry represent 4KB
@@ -46,76 +47,32 @@ page_dir:
 	.fill DIR_LEN, PAGE_DIR_ENTRY_SZ, EMPTY_ENTRY
 
 # Page table for kernel
-.align SIZE_4KB	# Must be aligned by 4KB
 page_tbl_0:
+	# Reserve space for other page_tables 1..1024
+	# 	and virtual address will equal to linear address
+
 	# Each entry is a set of flags and Frame address
 	.fill (DIR_LEN * TBL_LEN), PAGE_TBL_ENTRY_SZ, EMPTY_ENTRY
-	# reserve space for other page_tables 1..1024
-	# and virtual address will equal to linear address
-/* page_tables:
-	.skip TBL_LEN * PAGE_TBL_ENTRY_SZ * (DIR_LEN - 1) */
 paging_end:
 
 
 .section .text
+# Setup kernel addr area, load CR* registers
+# In:
+#	eax - max addr in kernel space
 setup_page:
+	# loadl max addr from EAX, and init pagging
 	call allocate_kernel
 
 	# setup cr3 register with page dir pointer
 	movl $page_dir, %ecx
 	movl %ecx, %cr3
+
 	# setup paging bit in cr0
 	movl %cr0, %ecx
 	or $0x80000000, %ecx
 	movl %ecx, %cr0
 
-	ret
-
-/*
-clear_page_dir:
-	movl $DIR_LEN, %ecx
-	movl $0, %ebx
-	CPD_cycle_begin:
-		cmp %ebx, %ecx
-		je CPD_cycle_end
-		leal page_dir(,%ebx, PAGE_DIR_ENTRY_SZ), %eax
-		# We can use EMPTY_TBL_ENTRY because table start aligned by 4KB
-		#	and last 12 bits used for flags(Present, RW, Permissions)
-		movl $EMPTY_ENTRY, (%eax)
-		incl %ebx
-		jmp CPD_cycle_begin
-	CPD_cycle_end:
-	ret
-*/
-
-# Setup tbl 0, first ecx chunks
-# ecx - number of chunks (by 4KB)
-setup_tbl_0:
-	movl $0, %ebx
-	ST0_cycle_start:
-		cmp %ebx, %ecx
-		je ST0_cycle_end
-		# pointer to Table Entry
-		leal page_tbl_0(,%ebx, PAGE_TBL_ENTRY_SZ), %eax
-		# push address
-		pushl %eax
-			# mul index and 4KB size
-			movl %ebx, %eax
-			movl $SIZE_4KB, %esi
-			mull %esi
-			# last bits-flag(Presetn, Write, SuperUser)
-			or $FILLED_ENTRY, %eax	# 0b11
-			# move mul result to edx
-			movl %eax, %edx
-		# pop addr
-		popl %eax
-		# Set table entry
-		movl %edx, (%eax)
-
-		# goto next entry
-		incl %ebx
-		jmp ST0_cycle_start
-	ST0_cycle_end:
 	ret
 
 # Setup page tables for kernel
@@ -142,7 +99,7 @@ allocate_kernel:
 		addl $0x1000, %ecx	# inc Phys addr for 4KB
 		addl $4, %ebx		# int PT addr for entry size
 	jmp AK_cycle_begin
-AK_end:
+	AK_end:
 
 	# fill Page Directory table
 	AK_dir_fill:
@@ -163,12 +120,12 @@ AK_end:
 
 		cmp %ebx, %eax
 			je AK_fill_end
-			
+
 		incl %eax
 		incl %ecx
 	jmp AK_fill_begin
 
-AK_fill_end:
+	AK_fill_end:
 	ret
 
 # Get Directory info and PageTable Info from page addr
