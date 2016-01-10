@@ -11,10 +11,6 @@
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
 
-#if !defined(__i386__)
-#error "This tutorial needs to be compiled with a ix86-elf compiler"
-#endif
-
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif

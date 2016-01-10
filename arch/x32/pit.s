@@ -38,6 +38,7 @@ timer_counter:
 	.long 0x0
 
 .section .text
+# jiust print tick-number
 timer_handler:
 	cli
 	pusha
@@ -52,11 +53,24 @@ timer_handler:
 	sti
 	iret
 
+# reading keyboard input
+timer_handler2:
+	cli
+	pusha
+	inb $0x60, %ax
+	pushl %eax
+	call k_print
+	popl %eax
+	call pic_ack
+	popa
+	sti
+	iret
+
 # Initialize timer and set interrupt handler
 init_pit:
 	cli
 	# add interrupt listener for IRQ0 (interrupt no 32)
-	movl $timer_handler, %eax
+	movl $timer_handler2, %eax
 	movl $32, %ebx
 	call set_idt_entry
 

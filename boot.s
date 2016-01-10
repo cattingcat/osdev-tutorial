@@ -1,3 +1,4 @@
+.code32
 # Declare constants used for creating a multiboot header.
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -39,6 +40,8 @@ stack_top:
 .include "arch/x32/pic.s"
 .include "arch/x32/pit.s"
 .include "arch/x32/page.s"
+.include "arch/x32/keyboard.s"
+.include "arch/cpuid.s"
 
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
@@ -59,8 +62,8 @@ _start:
 	call setup_pic
 
 	# Test functions for Software and Hardware interrupts
-	# call setup_test_idt_entry
-	# call init_pit
+	call setup_test_idt_entry
+	call init_pit
 
 	movl $__end, %eax
     call setup_page
@@ -69,9 +72,14 @@ _start:
 	# try to throw PageFault
 	# movl (0xFFFFFFFFFFFFFFFA), %eax
 
+
+	call init_keyboard
+
 	# enable IRQ (PIT interrupts)
 	mov $0x00, %ax
 	call set_pic_mask
+
+
 
 
 

@@ -32,10 +32,10 @@ setup_pic:
 	# Master PIC: IRQ(Interrupt nums) 0..7,  Vetcor offset: 0x08, IntNums: 0x08..0x0F
 	# Slave PIC:  IRQ(Interrupt nums) 8..15, Vetcor offset: 0x70, IntNums: 0x70..0x77
 
-	# 1_Master: Master PIC vector offset
+	# 1_Master: Master PIC vector offset (remap IRQ from 0x8-0xF to 0x20-0x28)
 	movb $0x20, %al
 	outb %al, $PIC1_D
-	# 1_Slave: Slave PIC vector ofsset
+	# 1_Slave: Slave PIC vector ofsset (remap IRQ from 0x70-0x77 to 0x28-0x...)
 	movb $0x28, %al
 	outb %al, $PIC2_D
 	# 2_Master: tell Master PIC that there is a slave PIC at IRQ2 (0000 0100)
